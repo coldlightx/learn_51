@@ -1,0 +1,6 @@
+*.pdf
+*.uvgui.x
+*.uvopt
+Objects
+Listings
+.vscode
