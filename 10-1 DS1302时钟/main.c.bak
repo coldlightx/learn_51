@@ -1,0 +1,32 @@
+#include <REGX52.H>
+#include "LCD1602.h"
+#include "DS1302.h"
+
+
+void main()
+{
+
+    unsigned char seconds = 0;
+    unsigned char minutes = 0;
+
+    DateTime datetime = {2025, 4, 9, 3, 23, 55};
+
+    DS1302_disable_write_protect();
+    DS1302_set_datetime(&datetime);
+
+    LCD_Init();
+    LCD_ShowString(1, 1, "RTC");
+
+    DS1302_write(0x80, 0x06);
+
+    while (1)
+    {
+        seconds = BCD_to_DEC(DS1302_read(0x81));
+        minutes = BCD_to_DEC(DS1302_read(0x83));
+
+        LCD_ShowNum(2, 1, minutes, 2);
+        LCD_ShowString(2, 3, ":");
+        LCD_ShowNum(2, 4, seconds, 2);
+    }
+    
+}
