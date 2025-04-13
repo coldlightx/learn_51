@@ -1,10 +1,9 @@
-#include <REGX52.H>
+#include <8052.h>
 #include "DS1302.h"
 
-sbit SCLK = P3^6;
-sbit IO = P3^4;
-sbit CE = P3^5;
-
+__sbit __at (0xB0+6) SCLK;
+__sbit __at (0xB0+4) IO;
+__sbit __at (0xB0+5) CE;
 
 #define DS1302_SECOND 0x80
 #define DS1302_MINUTE 0x82
@@ -14,8 +13,6 @@ sbit CE = P3^5;
 #define DS1302_DAY 0x8A
 #define DS1302_YEAR 0x8C
 #define DS1302_WP 0x8E
-
-
 
 
 void DS1302_init()

@@ -1,3 +1,4 @@
+#include <8052.h>
 #include "delay.h"
 
 

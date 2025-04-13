@@ -4,3 +4,14 @@
 Objects
 Listings
 .vscode
+
+# sdcc output files
+*.ihx
+*.lk
+*.asm
+*.lst
+*.map
+*.mem
+*.rel
+*.rst
+*.sym
