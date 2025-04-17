@@ -1,26 +1,36 @@
 CC = sdcc
-CFLAGS = -mmcs51 --iram-size 512 --stack-auto --opt-code-size --model-small --code-size 8192  -DPRINTF_DISABLE_SUPPORT_FLOAT=1 -DPRINTF_DISABLE_SUPPORT_EXPONENTIAL=1 -DPRINTF_DISABLE_SUPPORT_LONG_LONG=1
-TARGET = main.hex
-SRCS = main.c printf.c delay.c DS1302.c key.c LCD1602.c
-OBJS=$(SRCS:.c=.rel)
-DEPS=$(SRCS:.c=.d)
+CFLAGS = -mmcs51 --iram-size 512 --stack-auto --model-small --code-size 8192
+
+
+BUILD_DIR = build
+OBJECTS_DIR = $(BUILD_DIR)/objects
+DEPS_DIR = $(BUILD_DIR)/deps
+TARGET = $(BUILD_DIR)/main.hex
+SRCS = $(wildcard *.c)
+OBJS=$(addprefix $(OBJECTS_DIR)/,$(SRCS:.c=.rel))
+DEPS=$(addprefix $(DEPS_DIR)/,$(SRCS:.c=.d))
+
+$(shell mkdir -p $(OBJECTS_DIR))
+$(shell mkdir -p $(DEPS_DIR))
+
 
 all: $(TARGET)
+
+clean:
+	rm -rf build
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
 
+ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
+endif
 
 
-%.d: %.c
-	$(CC) $(CFLAGS) -MM $^ -o $@
-	sed -i "s/\.o:/\.rel:/" $*.d
-
-%.rel: %.c
+$(OBJECTS_DIR)/%.rel: %.c
 	$(CC) $(CFLAGS)  -c $< -o $@
 
-clean:
-	rm -rf $(TARGET) *.rel *.d *.ihx *.asm *.lst *.rst *.sym *.lk *.hex
-
+$(DEPS_DIR)/%.d: %.c
+	$(CC) $(CFLAGS) -MM $^ -o $@
+	sed -i "s/\.o:/\.rel:/" $@

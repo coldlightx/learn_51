@@ -1,15 +1,28 @@
 #include <8052.H>
+#include <stdio.h>
+#include <string.h>
 #include "LCD1602.h"
 #include "DS1302.h"
 #include "key.h"
-#include "printf.h"
+#include "timer0.h"
+#include "delay.h"
 
 // 0 for display mode, 1 for edit mode
 unsigned char MODE = 0;
 unsigned char SELECT = 1;
+unsigned char HIDE = 0;
 
 // always store the current time
 DateTime current_time;
+
+unsigned char printf_buffer[32] = "\0";
+unsigned char printf_buffer_index = 0;
+
+int putchar(int c)
+{
+    printf_buffer[printf_buffer_index++] = c;
+    return c;
+}
 
 
 int cycle(int value, int min_value, int max_value)
@@ -23,18 +36,110 @@ int cycle(int value, int min_value, int max_value)
     return value;
 }
 
-
-void show_datetime(DateTime *datetime)
+typedef struct
 {
-    char buffer[30]="\0";
+    unsigned char type; // 1 for date, 2 for time, 0 for invalid
+    unsigned char index;
+    unsigned char length;
+} Mask;
 
-    // show date
-    snprintf(buffer, 50, "20%02bu-%02bu-%02bu", datetime->year, datetime->month, datetime->date);
+Mask get_time_mask_for_select(unsigned char select)
+{
+    switch (select)
+    {
+    case 1:
+    {
+        Mask mask = {1, 0, 4};
+        return mask;
+    }
+
+    case 2:
+    {
+        Mask mask = {1, 5, 2};
+        return mask;
+    }
+
+    case 3:
+    {
+        Mask mask = {1, 8, 2};
+        return mask;
+    }
+    case 4:
+    {
+        Mask mask = {1, 11, 1};
+        return mask;
+    }
+
+    case 5:
+    {
+        Mask mask = {2, 0, 2};
+        return mask;
+    }
+
+    case 6:
+    {
+        Mask mask = {2, 3, 2};
+        return mask;
+    }
+
+    case 7:
+    {
+        Mask mask = {2, 6, 2};
+        return mask;
+    }
+    default:
+    {
+        Mask mask = {0, 0, 0};
+        return mask;
+    }
+    }
+}
+
+void mask_string(char * s, char mask, unsigned char start, unsigned char end)
+{
+    unsigned int i;
+    for (i = start; i < end; i++)
+        s[i] = mask;
+}
+
+
+void date_string(DateTime * datetime, unsigned char * buffer)
+{
+    printf_buffer_index = 0;
+    printf_fast("20%02d-%02d-%02d %1d", datetime->year, datetime->month, datetime->date, datetime->day);
+    printf_buffer[printf_buffer_index] = '\0';
+
+    strcpy(buffer, printf_buffer);
+}
+
+
+void time_string(DateTime * datetime, unsigned char * buffer)
+{
+    printf_buffer_index = 0;
+    printf_fast("%02d:%02d:%02d", datetime->hour, datetime->minute, datetime->second);
+    printf_buffer[printf_buffer_index] = '\0';
+    strcpy(buffer, printf_buffer);
+}
+
+
+void show_datetime(DateTime *datetime, unsigned char mode, unsigned char select, unsigned char hide)
+{
+    
+    Mask time_mask;
+
+    unsigned char buffer[32];
+    
+    time_mask = get_time_mask_for_select(select);
+
+    date_string(datetime, buffer);
+    if (mode && hide && time_mask.type == 1)
+        mask_string(buffer, ' ', time_mask.index, time_mask.index + time_mask.length);
     LCD_ShowString(1, 3, buffer);
 
-    LCD_ShowNum(1, 14, datetime->day, 1);
 
-    snprintf(buffer, 50, "%02bu:%02bu:%02bu", datetime->hour, datetime->minute, datetime->second);
+    time_string(datetime, buffer);
+    if (mode && hide && time_mask.type == 2)
+        mask_string(buffer, ' ', time_mask.index, time_mask.index + time_mask.length);
     LCD_ShowString(2, 4, buffer);
 }
 
@@ -166,7 +271,7 @@ void set_date(unsigned char date)
 }
 
 
-void modify_time_by_step(unsigned char position, char step)
+void modify_time_by_step(unsigned char position, int step)
 {
 
     switch (position)
@@ -212,15 +317,16 @@ void key_pressed(unsigned char key_number)
         select_button_clicked();
         break;
     case 3:
-        modify_time_by_step(SELECT, 1);
+        if(MODE) modify_time_by_step(SELECT, 1);
         break;
     case 4:
-        modify_time_by_step(SELECT, -1);
+        if(MODE) modify_time_by_step(SELECT, -1);
         break;
     default:
         break;
     };
 }
+
 
 void main()
 {
@@ -236,19 +342,32 @@ void main()
     DS1302_set_datetime(&datetime);
 
     LCD_Init();
+    Timer0_Init();
 
     while (1)
     {
         DS1302_get_datetime(&datetime);
-        show_datetime(&datetime);
+        show_datetime(&datetime, MODE, SELECT, HIDE);
 
-        LCD_ShowNum(2, 1, SELECT, 2);
         key_number = get_key();
 
         if (key_number)
         {
             key_pressed(key_number);
-            LCD_ShowNum(2, 15, key_number, 2);
         }
     }
+}
+
+
+void timer0_routine() __interrupt(1)
+{
+    static unsigned int counter = 0;
+    counter++;
+    
+    if (counter >= 500)
+    {
+        counter = 0;
+        HIDE = !HIDE;
+    }
+    Timer0_Reg_Init();
 }
