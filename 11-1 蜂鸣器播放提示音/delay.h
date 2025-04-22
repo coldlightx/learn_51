@@ -3,6 +3,8 @@
 
 void delay(unsigned int);
 void delay_n10us(unsigned int n);
+void delay_clock(unsigned int us);
+void delay_n100us(unsigned char n);
 unsigned char get_bit_value(unsigned int number, unsigned char bit_position);
 unsigned char nearest_non_zero_bit(unsigned char number);
 
