@@ -18,7 +18,7 @@ void main()
 
         if (key)
         {
-            clock_beep(200, 1000);
+            clock_beep_loop(200, 1000);
             display_number(1, key);
         }
     }
