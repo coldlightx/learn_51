@@ -15,8 +15,9 @@ void light_led(unsigned int time, unsigned int light_time)
     if (light_time > 0) LED = 0;
     delay_time(light_time);
 
-    LED = 1;
-    delay_time(time - light_time);
+    int dark_time = time - light_time;
+    if(dark_time > 0) LED = 1;
+    delay_time(dark_time);
 }
 
 
