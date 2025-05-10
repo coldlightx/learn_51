@@ -23,7 +23,7 @@ void Timer0_Init(void)		//1毫秒@11.0592MHz
 
 
 /* T0定时器中断接口函数示例
-void timer0_routine() interrupt 1
+void timer0_routine() __interrupt(1)
 {
     static unsigned int counter = 0;
     counter++;
