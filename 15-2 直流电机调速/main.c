@@ -6,7 +6,7 @@
 #include "serial_log.h"
 #include "delay.h"
 
-SBIT(LED, 0xA0, 0);
+SBIT(MOTOR, 0x90, 0);
 
 #define COUNTER_MAX 100
 unsigned int timer_counter = 0;
@@ -18,7 +18,6 @@ unsigned char speed = 0;
 void operate_for_key(unsigned char key)
 {
 
-    printf_fast("key pressed is: %d\n", key);
     switch (key)
     {
     case 1:
@@ -42,11 +41,11 @@ void operate_for_key(unsigned char key)
         break;
     
     case 1:
-        timer_threshold = 10;
+        timer_threshold = 50;
         break;
     
     case 2:
-        timer_threshold = 50;
+        timer_threshold = 75;
         break;
 
     case 3:
@@ -62,29 +61,16 @@ void operate_for_key(unsigned char key)
 
 void main(void)
 {
+    unsigned char key = 0;
+    
     Timer0_Init();
-    init_T2(0xFF91); // 10us
-
+    init_T2(0xFFF7); // 10us
+    
     lcd_display_number(8, speed);
-
-    printf_fast("program start.\n");
-
+    
     while (1)
     {
-
-        unsigned char key = get_key();
-        operate_for_key(key);
-        // if (key)
-        // {
-        //     // P2_7 = 1;
-        //     // P2_7 = 0;
-        //     // delay(10);
-        //     // P2_7 = 1;
-        //     operate_for_key(key);
-        // }
-
-        // P2_7 = 1;
-
+        operate_for_key(get_key());
     }
 }
 
@@ -93,8 +79,8 @@ void timer0_routine() __interrupt(1)
 {
     static unsigned int key_counter = 0, lcd_counter = 0;
 
+    Timer0_Reg_Init();
 
-    P2_6 = 0;
     if (lcd_counter++ >= 1){
         lcd_counter = 0;
         lcd_loop();
@@ -105,10 +91,6 @@ void timer0_routine() __interrupt(1)
         key_counter = 0;
         key_loop();
     }
-    
-    Timer0_Reg_Init();
-
-    P2_6 = 1;
 
 }
 
@@ -121,8 +103,8 @@ void time2_routine() __interrupt(5)
         timer_counter = 0;
     
     if (timer_counter < timer_threshold)
-        LED = 0;
+        MOTOR = 1;
     else
-        LED = 1;
+        MOTOR = 0;
 
 }
