@@ -1,5 +1,4 @@
 #include <mcs51reg.h>
-#include <compiler.h>
 
 SBIT(CS, 0xB0, 5);
 SBIT(DCLK, 0xB0, 6);
