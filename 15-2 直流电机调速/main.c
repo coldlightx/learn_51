@@ -107,4 +107,6 @@ void time2_routine() __interrupt(5)
     else
         MOTOR = 0;
 
+    TF2 = 0;
+
 }

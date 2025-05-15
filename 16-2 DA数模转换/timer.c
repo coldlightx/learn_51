@@ -91,12 +91,15 @@ void init_T2(unsigned int init_value)
     T2CON = 0x00;
     T2MOD = 0x00;
     
-    RCAP2H = init_value >> 8;
-    RCAP2L = init_value;
-
-    TH2 = RCAP2H;
-    TL2 = RCAP2L;
-
+    // 注意, 中断函数的中断周期不能设置的过小
+    // 过小的中断周期会导致中断函数刚执行完便
+    // 开始执行下一次中断, 从而导致主程序类似
+    // 于卡住, 也会导致主函数中的delay不准,对
+    // 于STC89C52RC(11.0592MHz), 10us便会导致程序出现类似
+    // 于卡住的情况, 100us则不会
+    TH2 = RCAP2H = init_value >> 8;
+    TL2 = RCAP2L = init_value;
+    
     TR2 = 1;
     ET2 = 1;
     EA = 1;
