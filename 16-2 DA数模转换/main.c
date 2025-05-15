@@ -57,7 +57,7 @@ void main(void)
 
 SBIT(TF2, 0xc8, 7);
 
-void timer2_routine() __interrupt(5) __using(0)
+void timer2_routine() __interrupt(5)
 {
     static unsigned int timer_counter = 0;
 
