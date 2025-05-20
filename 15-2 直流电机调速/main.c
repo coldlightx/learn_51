@@ -5,6 +5,7 @@
 #include "lcd.h"
 #include "serial_log.h"
 #include "delay.h"
+#include "timer.h"
 
 SBIT(MOTOR, 0x90, 0);
 
