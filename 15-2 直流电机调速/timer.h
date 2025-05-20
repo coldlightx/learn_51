@@ -15,4 +15,5 @@ SFR(TH2, 0xcd);
 SBIT(TF2, 0xc8, 7);
 SBIT(TR2, 0xc8, 2);
 SBIT(ET2, 0xa8, 5);
+
 #endif // __TIME0_H__
