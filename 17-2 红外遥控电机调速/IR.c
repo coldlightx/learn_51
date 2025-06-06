@@ -4,6 +4,8 @@
 #include "timer.h"
 #include "int0.h"
 #include "serial_log.h"
+#include "delay.h"
+
 
 IRData IR_data = {
     .state = IDLE,
@@ -128,7 +130,12 @@ void handle_data_receive(unsigned int time)
             IR_data.data_received = 1;
             IR_data.address = IR_data.data[0];
             IR_data.command = IR_data.data[2];
+
+            P2_0 = 0;
+            delay(100);
+            P2_0 = 1;
         }
+
         else
         {
             printf_fast("data verify error:\naddress:%x, ~address:%x\ncommand:%x, ~command:%x",
@@ -142,14 +149,18 @@ void handle_data_receive(unsigned int time)
 
 
 
+// 如果要观测命令时序情况, 可以取消注释该函数
+// 因time_arr占用RAM空间较大, 且正常不使用该
+// 函数, 故对其进行注释
 void record_time(unsigned int time)
 {
-    static unsigned int time_arr[36] = {0};
+
+    static unsigned int time_arr[35] = {0};
     static unsigned char time_arr_index = 0;
 
     time_arr[time_arr_index++] = time;
 
-    if (time_arr_index >= 34)
+    if (time_arr_index >= 34 && IR_data.write_index != 31)
     {
         printf_fast("time arr: ");
         for (unsigned char i = 0; i < time_arr_index; i++)
@@ -159,11 +170,11 @@ void record_time(unsigned int time)
         printf_fast("\n");
         time_arr_index = 0;
 
-        printf_fast("%d, %d, %d, %d, %d, %x, %x, %x, %x\n",
+        printf_fast("%d, %d, %d, %d, %d, %x, %x, %x, %x\nTR0: %d, TH0: %x, TL0:%x\n",
             IR_data.start_time, IR_data.data_received,
             IR_data.address, IR_data.command,
-            IR_data.write_index, IR_data.data[0],
-            IR_data.data[1], IR_data.data[2], IR_data.data[3]);
+            IR_data.write_index, IR_data.data[0],   
+            IR_data.data[1], IR_data.data[2], IR_data.data[3], TR0, TH0, TL0);
     }
 }
 
@@ -189,6 +200,9 @@ void IR_int0_routine() __interrupt(0)
     default:
         break;
     }
+
+
+    // record_time(time);
 }
 
 
